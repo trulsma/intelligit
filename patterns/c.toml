@@ -1,0 +1,42 @@
+[parser]
+url = "https://github.com/tree-sitter/tree-sitter-c.git"
+
+[file]
+file_types=["c", "h"]
+
+[[pattern]]
+query="""
+(function_definition
+	declarator: (_) @name
+) @function
+"""
+kind="function"
+range_capture=["function"]
+identifier_capture=["name"]
+
+[[pattern]]
+query="""
+(translation_unit
+  (struct_specifier
+    name: (type_identifier) @name
+    body: (_)
+  ) @struct
+)
+"""
+kind="struct"
+range_capture=["struct"]
+identifier_capture=["name"]
+
+[[pattern]]
+query="""
+(declaration
+  (struct_specifier
+    name: (type_identifier) @name
+    body: (_)
+) @struct
+)
+"""
+kind="struct"
+range_capture=["struct"]
+identifier_capture=["name"]
+

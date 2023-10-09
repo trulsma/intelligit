@@ -1,0 +1,41 @@
+# Very basic template but showcases multiple language in single repo
+# parser = { url = "https://github.com/tree-sitter/tree-sitter-ocaml", src_path = "ocaml/src/" }
+parser = { precompiled = "ocaml" }
+
+[qualifier]
+seperator = "."
+
+[file]
+file_types = ["ml"]
+
+[[pattern]]
+kind = "function"
+query = """
+(
+  (comment)? @doc 
+  .
+  (value_definition
+    [
+    (let_binding
+      pattern: (value_name) @name
+      (parameter))
+    (let_binding
+      pattern: (value_name) @name
+      body: [(fun_expression) (function_expression)])
+    ]
+  ) @function
+)
+"""
+range_capture = ["function", "doc"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "module"
+query = """
+(
+  (comment)? @doc .
+  (module_definition (module_binding (module_name) @name) @module)
+)
+"""
+range_capture = ["module", "doc"]
+identifier_capture = ["name"]

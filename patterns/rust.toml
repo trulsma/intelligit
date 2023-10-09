@@ -1,0 +1,184 @@
+[parser]
+precompiled = "rust"
+
+[qualifier]
+seperator = "::"
+
+[file]
+file_types = ["rs"]
+
+[[pattern]]
+kind = "struct"
+query = """
+(struct_item
+  name: (type_identifier) @name) @struct"""
+range_capture = ["struct"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "enum"
+query = """
+(enum_item
+  name: (type_identifier) @name) @enum"""
+range_capture = ["enum"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "fn"
+query = """
+(
+  (
+    (attribute_item (attribute (identifier) @attr_id)) @attr*
+  )
+  .
+  (function_item
+  	name: (identifier) @name) @function
+)
+"""
+range_capture = ["attr", "function"]
+identifier_capture = ["name"]
+[[pattern.filters]]
+capture = "attr_id"
+operator = "not-contains"
+value = "test"
+
+[[pattern]]
+kind = "test"
+query = """
+(
+  (attribute_item (attribute (identifier) @attr_id)) @attr*
+  .
+  (function_item
+  	name: (identifier) @name) @function
+)
+"""
+range_capture = ["attr", "function"]
+identifier_capture = ["name"]
+[[pattern.filters]]
+capture = "attr_id"
+operator = "contains"
+value = "test"
+
+[[pattern]]
+kind = "impl"
+query = """
+(impl_item
+  type: (_) @name 
+  !trait) @impl"""
+range_capture = ["impl"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "trait"
+query = """
+(trait_item
+  name: (type_identifier) @name) @trait"""
+range_capture = ["trait"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "trait_impl"
+query = """
+(impl_item
+  trait: (_) @trait
+  type: (_) @name 
+) @trait_impl"""
+range_capture = ["trait_impl"]
+identifier_capture = ["name", "trait"]
+
+[[pattern]]
+kind = "mod"
+query = """
+(mod_item
+  name: (identifier) @name) @module"""
+range_capture = ["module"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "const"
+query = """
+(const_item
+  name: (identifier) @name) @constant"""
+range_capture = ["constant"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "type"
+query = """
+(type_item
+  name: (type_identifier) @name) @type"""
+range_capture = ["type"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "type"
+query = """
+(associated_type
+  (type_identifier) @name) @type"""
+range_capture = ["type"]
+identifier_capture = ["name"]
+
+
+# [[pattern]]
+# kind="use"
+# query="""
+# (use_declaration
+#   argument: (scoped_identifier) @id
+# )
+# """
+# range_capture=["id"]
+# identifier_capture=["id"]
+#
+# [[pattern]]
+# kind="use"
+# query="""
+# (use_list
+#   (identifier) @id
+# )
+# """
+# range_capture=["id"]
+# identifier_capture=["id"]
+#
+# [[pattern]]
+# kind="use_path"
+# query="""
+# (scoped_use_list
+#   path: (identifier) @path
+# ) @list
+# """
+# range_capture=["list"]
+# identifier_capture=["path"]
+# hidden=true
+#
+# [[pattern]]
+# kind="use_path"
+# query="""
+# (use_list
+#   (scoped_identifier
+#     path: (_) @path
+#     name: (identifier) @name
+#   ) @id
+# )
+# """
+# range_capture=["id"]
+# identifier_capture=["path", "name"]
+# hidden=true
+#
+
+
+# [[pattern]]
+# kind="todo"
+# query="""
+# (
+#   (macro_invocation
+#     macro: (identifier) @macro
+#     (token_tree
+#       (string_literal) @name
+#     )
+#   ) @macro_invocation
+#   (#eq? @macro "todo")
+# )
+#
+# """
+# range_capture=["macro_invocation"]
+# identifier_capture=["name"]

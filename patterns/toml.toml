@@ -1,0 +1,36 @@
+# parser = { url = "https://github.com/Mathspy/tree-sitter-toml" }
+parser = { precompiled = "toml" }
+
+qualifier = { seperator = "." }
+
+[file]
+file_types = ["toml"]
+
+
+[[pattern]]
+kind = "table"
+query = """
+(table 
+  (bare_key) @key
+) @table
+"""
+range_capture = ["table"]
+identifier_capture = ["key"]
+
+[[pattern]]
+kind = "property"
+query = """ 
+(table
+  (pair (bare_key) @name _) @pair 
+)"""
+range_capture = ["pair"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "property"
+query = """ 
+(document
+  (pair (bare_key) @name _) @pair 
+)"""
+range_capture = ["pair"]
+identifier_capture = ["name"]

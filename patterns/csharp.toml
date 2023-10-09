@@ -1,0 +1,82 @@
+[parser]
+precompiled = "csharp"
+
+[qualifier]
+seperator = "."
+
+[file]
+file_types = ["cs"]
+
+[[pattern]]
+kind = "class"
+query = """
+(class_declaration
+  name: (identifier) @name
+) @class
+"""
+range_capture = ["class"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "interface"
+query = """
+(interface_declaration
+  name: (identifier) @name
+) @interface
+"""
+range_capture = ["interface"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "method"
+query = """
+(method_declaration
+  name: (identifier) @name
+) @method
+"""
+range_capture = ["method"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "field"
+query = """
+(field_declaration 
+  (variable_declaration
+    (variable_declarator
+      (identifier) @name
+    )
+  )
+) @field
+"""
+range_capture = ["field"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "property"
+query = """
+(property_declaration 
+  name: (identifier) @name
+) @field
+"""
+range_capture = ["field"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "namespace"
+query = """
+(namespace_declaration
+  name: (identifier) @name
+) @namespace
+"""
+range_capture = ["namespace"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "namespace"
+query = """
+(compilation_unit
+  (file_scoped_namespace_declaration name: (_) @name)
+) @file
+"""
+range_capture = ["file"]
+identifier_capture = ["name"]

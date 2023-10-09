@@ -1,0 +1,22 @@
+parser = { precompiled = "json" }
+
+[qualifier]
+seperator = "."
+
+[file]
+file_types = ["json"]
+
+[[pattern]]
+kind = "property"
+query = """
+(document
+  (object
+    (pair
+      (string (string_content) @key)
+      _
+    ) @pair
+  )
+)
+"""
+range_capture = ["pair"]
+identifier_capture = ["key"]
