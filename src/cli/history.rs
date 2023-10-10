@@ -429,6 +429,7 @@ fn build_history(
 
                         let after_size = tree.root_node().range().end_point.row;
 
+                        // We calculate diff two times. This is probably not necessary
                         let changes = diff::changes(rhs_content, lhs_content);
                         for change in changes {
                             tree.edit(&change);

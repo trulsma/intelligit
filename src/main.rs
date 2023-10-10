@@ -1,4 +1,3 @@
-#![feature(hash_extract_if, extract_if)]
 mod cli;
 mod datastore;
 mod diff;

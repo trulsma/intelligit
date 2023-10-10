@@ -2,7 +2,7 @@ use crate::cli::command::{GlobalOpts, StatusArgs};
 use crate::diff;
 use crate::git;
 use crate::git::RepositoryExt;
-use crate::parser::{PatternListMatcher, PatternMatch};
+use crate::parser::{PatternList, PatternListMatcher, PatternMatch};
 use anyhow::Context;
 use colored::Colorize;
 use std::{collections::HashSet, path::PathBuf, rc::Rc};
@@ -85,41 +85,15 @@ pub(crate) fn print_status(args: &StatusArgs, global_opts: &GlobalOpts) -> anyho
                 after_content,
             } = file
             {
-                match matcher.pattern_for_file_path(path) {
-                    Some(pattern) => {
-                        let lhs = pattern.matches(before_content, None, None);
-                        let rhs = pattern.matches(after_content, None, None);
-
-                        let (lhs, rhs) = match (lhs, rhs) {
-                            (Ok(lhs), Ok(rhs)) => (lhs, rhs),
-                            _ => {
-                                println!(
-                                    "{} {} {}",
-                                    "~".purple(),
-                                    path.green(),
-                                    "Failed to pattern match".red()
-                                );
-                                continue;
-                            }
-                        };
-
-                        println!("{} {}", "~".purple(), path.green());
-                        let (novel_lhs, novel_rhs) = diff::diff(before_content, after_content);
-                        let mut changes = diff_matches(
-                            before_content,
-                            after_content,
-                            novel_lhs,
-                            novel_rhs,
-                            lhs,
-                            rhs,
-                        );
-
+                match diff_matches(&matcher, path, before_content, after_content) {
+                    Some((pattern, mut changes)) => {
                         changes.sort_by_key(|diff| match diff {
                             PatternMatchDiff::Added(mtch) => mtch.range_first_byte(),
                             PatternMatchDiff::Deleted(mtch) => mtch.range_first_byte(),
                             PatternMatchDiff::Modified { before, .. } => before.range_first_byte(),
                         });
 
+                        println!("{} {}", "~".purple(), path.green());
                         for change in changes {
                             match change {
                                 PatternMatchDiff::Added(mtch) => println!(
@@ -147,7 +121,6 @@ pub(crate) fn print_status(args: &StatusArgs, global_opts: &GlobalOpts) -> anyho
                             }
                         }
                     }
-
                     None => println!(
                         "{} {} {}",
                         "~".purple(),
@@ -180,36 +153,15 @@ pub(crate) fn print_status(args: &StatusArgs, global_opts: &GlobalOpts) -> anyho
                 after_content,
             } = file
             {
-                match matcher.pattern_for_file_path(path) {
-                    Some(pattern) => {
-                        let lhs = pattern.matches(before_content, None, None);
-                        let rhs = pattern.matches(after_content, None, None);
-
-                        let (lhs, rhs) = match (lhs, rhs) {
-                            (Ok(lhs), Ok(rhs)) => (lhs, rhs),
-                            _ => {
-                                println!(
-                                    "{} {} {}",
-                                    "~".purple(),
-                                    path.green(),
-                                    "Failed to pattern match".red()
-                                );
-                                continue;
-                            }
-                        };
+                match diff_matches(&matcher, path, before_content, after_content) {
+                    Some((pattern, mut changes)) => {
+                        changes.sort_by_key(|diff| match diff {
+                            PatternMatchDiff::Added(mtch) => mtch.range_first_byte(),
+                            PatternMatchDiff::Deleted(mtch) => mtch.range_first_byte(),
+                            PatternMatchDiff::Modified { before, .. } => before.range_first_byte(),
+                        });
 
                         println!("{} {}", "~".purple(), path.green());
-                        let (novel_lhs, novel_rhs) = diff::diff(before_content, after_content);
-
-                        let changes = diff_matches(
-                            before_content,
-                            after_content,
-                            novel_lhs,
-                            novel_rhs,
-                            lhs,
-                            rhs,
-                        );
-
                         for change in changes {
                             match change {
                                 PatternMatchDiff::Added(mtch) => println!(
@@ -237,7 +189,6 @@ pub(crate) fn print_status(args: &StatusArgs, global_opts: &GlobalOpts) -> anyho
                             }
                         }
                     }
-
                     None => println!(
                         "{} {} {}",
                         "~".purple(),
@@ -256,152 +207,65 @@ pub(crate) fn print_status(args: &StatusArgs, global_opts: &GlobalOpts) -> anyho
 enum PatternMatchDiff {
     Added(Rc<PatternMatch>),
     Deleted(Rc<PatternMatch>),
-    #[allow(dead_code)]
     Modified {
         before: Rc<PatternMatch>,
+        #[allow(dead_code)]
         after: Rc<PatternMatch>,
     },
 }
 
-fn diff_matches(
+fn diff_matches<'a>(
+    pattern_matcher: &'a PatternListMatcher,
+    path: &str,
     before_content: &[u8],
     after_content: &[u8],
-    novel_lhs: Vec<u32>,
-    novel_rhs: Vec<u32>,
-    mut lhs: Vec<Rc<PatternMatch>>,
-    mut rhs: Vec<Rc<PatternMatch>>,
-) -> Vec<PatternMatchDiff> {
-    #[derive(Debug)]
-    struct PatternMatchWithHash(Rc<PatternMatch>);
-    // Retrns wrong symols
-    impl std::hash::Hash for PatternMatchWithHash {
-        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-            self.0.kind.hash(state);
-            self.0.full_qualifiers.hash(state);
-        }
+) -> Option<(&'a PatternList, Vec<PatternMatchDiff>)> {
+    let pattern = pattern_matcher.pattern_for_file_path(path)?;
+
+    let mut tree = pattern.parse(before_content, None).ok()?;
+
+    let lhs = pattern.matches(before_content, Some(&tree), None).ok()?;
+
+    let changes = diff::changes(before_content, after_content);
+    for change in changes {
+        tree.edit(&change);
     }
-    impl PartialEq for PatternMatchWithHash {
-        fn eq(&self, other: &Self) -> bool {
-            self.0.kind == other.0.kind && self.0.full_qualifiers == other.0.full_qualifiers
-        }
-    }
-    impl Eq for PatternMatchWithHash {}
 
-    // Too avoid a marking a match as changed when the change in entirely located in a sub match
-    lhs.sort_by_key(|mtch| mtch.range_byte_count());
-    rhs.sort_by_key(|mtch| mtch.range_byte_count());
+    let rhs = pattern.matches(after_content, None, Some(&tree)).ok()?;
 
-    let mut lhs_changed = HashSet::new();
-    for line in novel_lhs {
-        // TODO: Change so all of rhs is not iterated through
-        // TODO: Make it possible for changes to be applied to all parents aswell. Some flag should
-        // be used
-        let mut change_is_contained_in_one_liner = false;
-        let mut change_is_contained = false;
-        for mtch in lhs.extract_if(|mtch| {
-            if !change_is_contained && mtch.contains_line(line as usize) {
-                let mtch_is_one_liner = mtch.is_one_liner();
-                match (change_is_contained_in_one_liner, mtch_is_one_liner) {
-                    (true, true) => true,
-                    (false, true) => {
-                        change_is_contained_in_one_liner = true;
-                        true
-                    }
-                    (false, false) => {
-                        change_is_contained = true;
-                        true
-                    }
-                    (true, false) => {
-                        change_is_contained = true;
-                        false
-                    }
-                }
-            } else {
-                false
-            }
-        }) {
-            lhs_changed.insert(PatternMatchWithHash(mtch));
-        }
-    }
-    let mut lhs_unchanged: HashSet<_> =
-        HashSet::from_iter(lhs.into_iter().map(PatternMatchWithHash));
+    let qualifiers: HashSet<_> = lhs
+        .iter()
+        .map(|mtch| &mtch.full_qualifiers)
+        .chain(rhs.iter().map(|mtch| &mtch.full_qualifiers))
+        .cloned()
+        .collect();
 
-    // Can be done in a single pass..
-    let mut rhs_changed = HashSet::new();
-    for line in novel_rhs {
-        // TODO: Change so all of rhs is not iterated through
-        let mut change_is_contained_in_one_liner = false;
-        let mut change_is_contained = false;
-        for mtch in rhs.extract_if(|mtch| {
-            if !change_is_contained && mtch.contains_line(line as usize) {
-                let mtch_is_one_liner = mtch.is_one_liner();
-                match (change_is_contained_in_one_liner, mtch_is_one_liner) {
-                    (true, true) => true,
-                    (false, true) => {
-                        change_is_contained_in_one_liner = true;
-                        true
-                    }
-                    (false, false) => {
-                        change_is_contained = true;
-                        true
-                    }
-                    (true, false) => {
-                        change_is_contained = true;
-                        false
-                    }
-                }
-            } else {
-                false
-            }
-        }) {
-            rhs_changed.insert(PatternMatchWithHash(mtch));
-        }
-    }
-    let mut rhs_unchanged: HashSet<_> =
-        HashSet::from_iter(rhs.into_iter().map(PatternMatchWithHash));
-
-    let mut diff = vec![];
-
-    let modified = lhs_changed
-        .extract_if(|lhs_mtch| rhs_changed.contains(lhs_mtch))
-        .collect::<Vec<_>>()
+    let diff = qualifiers
         .into_iter()
-        .filter_map(|lhs_mtch| {
-            rhs_changed
-                .take(&lhs_mtch)
-                .filter(|rhs_mtch| {
-                    lhs_mtch.0.checksum(before_content) != rhs_mtch.0.checksum(after_content)
-                })
-                .map(|rhs_mtch| PatternMatchDiff::Modified {
-                    before: lhs_mtch.0,
-                    after: rhs_mtch.0,
-                })
-        });
-    diff.extend(modified);
+        .map(|full_qualifiers| {
+            (
+                lhs.iter()
+                    .find(|mtch| mtch.full_qualifiers == full_qualifiers),
+                rhs.iter()
+                    .find(|mtch| mtch.full_qualifiers == full_qualifiers),
+            )
+        })
+        .filter_map(|matches| match matches {
+            (Some(lhs), Some(rhs)) => {
+                if lhs.checksum(before_content) != rhs.checksum(after_content) {
+                    Some(PatternMatchDiff::Modified {
+                        before: lhs.clone(),
+                        after: rhs.clone(),
+                    })
+                } else {
+                    None
+                }
+            }
+            (Some(lhs), None) => Some(PatternMatchDiff::Deleted(lhs.clone())),
+            (None, Some(rhs)) => Some(PatternMatchDiff::Added(rhs.clone())),
+            (None, None) => None,
+        })
+        .collect();
 
-    let deleted_or_modified =
-        lhs_changed
-            .into_iter()
-            .map(|lhs_mtch| match rhs_unchanged.take(&lhs_mtch) {
-                Some(rhs_mtch) => PatternMatchDiff::Modified {
-                    before: lhs_mtch.0,
-                    after: rhs_mtch.0,
-                },
-                None => PatternMatchDiff::Deleted(lhs_mtch.0),
-            });
-    diff.extend(deleted_or_modified);
-
-    let added_or_modified =
-        rhs_changed
-            .into_iter()
-            .map(|rhs_mtch| match lhs_unchanged.take(&rhs_mtch) {
-                Some(lhs_mtch) => PatternMatchDiff::Modified {
-                    before: lhs_mtch.0,
-                    after: rhs_mtch.0,
-                },
-                None => PatternMatchDiff::Added(rhs_mtch.0),
-            });
-    diff.extend(added_or_modified);
-
-    diff
+    Some((pattern, diff))
 }

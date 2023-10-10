@@ -30,10 +30,5 @@ If you have an idea or want to help please do :)
 ## License
 Intelligit is licensed under the [MIT License](LICENSE)
 
-
-## Disclaimers
-Some nighly features are currently used. To build you need nightly. These features should be removed (or postpone it long enough till the features are stable ;) ) 
-
-
 ## Acknowledgements
 * [gitoxide](https://github.com/Byron/gitoxide)

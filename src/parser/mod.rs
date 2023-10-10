@@ -82,14 +82,6 @@ impl PatternMatch {
             .min()
             .unwrap_or(0)
     }
-
-    pub fn is_one_liner(&self) -> bool {
-        let ranges = self.ranges.borrow();
-        if ranges.len() != 1 {
-            return false;
-        }
-        ranges[0].start_point.row == ranges[0].end_point.row
-    }
 }
 
 #[derive(Deserialize, Debug)]
