@@ -29,6 +29,3 @@ If you have an idea or want to help please do :)
 
 ## License
 Intelligit is licensed under the [MIT License](LICENSE)
-
-## Acknowledgements
-* [gitoxide](https://github.com/Byron/gitoxide)
