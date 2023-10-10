@@ -27,7 +27,7 @@ pub enum TSParser {
     },
 
     /// Precompiled parser are included in the binary to avoid needing to compile parser when only
-    /// using core patterns
+    /// using default patterns
     Precompiled { precompiled: String },
 }
 

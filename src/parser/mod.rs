@@ -573,14 +573,14 @@ pub struct PatternListMatcher {
 
 #[derive(Debug, Clone)]
 pub enum PatternIdentifier {
-    Core { name: String },
+    Default { name: String },
     Local { path: PathBuf },
 }
 
 impl std::fmt::Display for PatternIdentifier {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            PatternIdentifier::Core { name } => {
+            PatternIdentifier::Default { name } => {
                 f.write_fmt(format_args!("{} (core pattern)", name))
             }
             PatternIdentifier::Local { path } => f.write_str(&path.display().to_string()),
@@ -631,7 +631,7 @@ impl PatternListMatcher {
         Ok(results)
     }
 
-    pub fn load_core_patterns(&mut self) -> Result<Vec<LoadPatternResult>, LoadPatternsError> {
+    pub fn load_default_patterns(&mut self) -> Result<Vec<LoadPatternResult>, LoadPatternsError> {
         let patterns = [
             ("rust", include_str!("../../patterns/rust.toml")),
             ("csharp", include_str!("../../patterns/csharp.toml")),
@@ -644,7 +644,7 @@ impl PatternListMatcher {
         let results = patterns
             .into_iter()
             .map(|(name, pattern)| {
-                let identifier = PatternIdentifier::Core { name: name.into() };
+                let identifier = PatternIdentifier::Default { name: name.into() };
                 let result = match PatternList::from_toml_content(
                     &identifier,
                     pattern,
@@ -657,7 +657,7 @@ impl PatternListMatcher {
                     Err(err) => Err(err),
                 };
 
-                (PatternIdentifier::Core { name: name.into() }, result)
+                (PatternIdentifier::Default { name: name.into() }, result)
             })
             .collect();
 

@@ -43,21 +43,7 @@ fn print_symbols(path: &str, global_opts: &GlobalOpts) -> anyhow::Result<()> {
 
     let mut matcher = PatternListMatcher::new(PathBuf::from(&global_opts.parser_path));
 
-    if !global_opts.no_core_patterns {
-        let load_pattern_results = matcher
-            .load_core_patterns()
-            .context("Failed to load core patterns")?;
-
-        crate::cli::pattern::print_load_pattern_results(load_pattern_results);
-    }
-
-    if let Some(patterns_path) = &global_opts.patterns_path {
-        let load_pattern_results = matcher
-            .load_patterns(patterns_path)
-            .context(format!("Failed to load patterns from {}", patterns_path))?;
-
-        crate::cli::pattern::print_load_pattern_results(load_pattern_results);
-    }
+    crate::cli::pattern::load_patterns_from_opts(&mut matcher, global_opts)?;
 
     for file in files {
         let pattern = match matcher.pattern_for_file_path(&file) {

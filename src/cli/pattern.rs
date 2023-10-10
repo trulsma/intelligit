@@ -27,15 +27,16 @@ pub(crate) fn print_load_pattern_results(
     }
 }
 
-fn list_patterns(global_opts: &GlobalOpts) -> anyhow::Result<()> {
-    let mut matcher = PatternListMatcher::new(PathBuf::from(&global_opts.parser_path));
-
-    if !global_opts.no_core_patterns {
+pub(crate) fn load_patterns_from_opts(
+    matcher: &mut PatternListMatcher,
+    global_opts: &GlobalOpts,
+) -> anyhow::Result<()> {
+    if !global_opts.no_default_patterns {
         let load_pattern_results = matcher
-            .load_core_patterns()
+            .load_default_patterns()
             .context("Failed to load core patterns")?;
 
-        print_load_pattern_results(load_pattern_results);
+        crate::cli::pattern::print_load_pattern_results(load_pattern_results);
     }
 
     if let Some(patterns_path) = &global_opts.patterns_path {
@@ -43,8 +44,16 @@ fn list_patterns(global_opts: &GlobalOpts) -> anyhow::Result<()> {
             .load_patterns(patterns_path)
             .context(format!("Failed to load patterns from {}", patterns_path))?;
 
-        print_load_pattern_results(load_pattern_results);
+        crate::cli::pattern::print_load_pattern_results(load_pattern_results);
     }
+
+    Ok(())
+}
+
+fn list_patterns(global_opts: &GlobalOpts) -> anyhow::Result<()> {
+    let mut matcher = PatternListMatcher::new(PathBuf::from(&global_opts.parser_path));
+
+    load_patterns_from_opts(&mut matcher, global_opts)?;
 
     let indent = "  ";
     for pattern in matcher.patterns {
@@ -68,21 +77,7 @@ fn verify_patterns(global_opts: &GlobalOpts) -> anyhow::Result<()> {
     let parser_path = PathBuf::from(&global_opts.parser_path);
     let mut matcher = PatternListMatcher::new(parser_path);
 
-    if !global_opts.no_core_patterns {
-        let load_pattern_results = matcher
-            .load_core_patterns()
-            .context("Failed to load core patterns")?;
-
-        print_load_pattern_results(load_pattern_results);
-    }
-
-    if let Some(patterns_path) = &global_opts.patterns_path {
-        let load_pattern_results = matcher
-            .load_patterns(patterns_path)
-            .context(format!("Failed to load patterns from {}", patterns_path))?;
-
-        print_load_pattern_results(load_pattern_results);
-    }
+    crate::cli::pattern::load_patterns_from_opts(&mut matcher, global_opts)?;
 
     if matcher.patterns.is_empty() {
         println!("Found no patterns to verify..");

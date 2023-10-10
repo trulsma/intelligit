@@ -35,9 +35,9 @@ pub(crate) struct GlobalOpts {
     #[clap(long = "patterns", global = true, default_value = None)]
     pub(crate) patterns_path: Option<String>,
 
-    /// Skip loading core patterns
+    /// Skip loading default patterns
     #[clap(long, global = true, default_value_t = false)]
-    pub(crate) no_core_patterns: bool,
+    pub(crate) no_default_patterns: bool,
 
     #[clap(long = "log", global = true, default_value = "error")]
     pub(crate) loglevel: LogLevel,
