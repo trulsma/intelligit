@@ -567,7 +567,7 @@ pub struct PatternListMatcher {
     pub patterns: Vec<PatternList>,
     // Can be a bottleneck to have this as an arc mutex, could be rw lock with a rw lock on each
     // "row" in the hashmap. This would allow reading some languages while compiling others. Would
-    // only help when the langauges are not pre compiled.
+    // only help when the langauges are not precompiled.
     language_provider: Arc<Mutex<TSLanguageProvider>>,
 }
 
@@ -892,7 +892,7 @@ mod tests {
     fn pattern_list_file_filter() {
         let pattern = create_pattern(
             r#"
-            parser = { url = "https://github.com/tree-sitter/tree-sitter-rust" }
+            parser = { precompiled = "rust" }
             file = { file_types = ["rs"], exact_file_name = ["package.json"] }
             [[pattern]]
             kind="struct"
@@ -909,12 +909,11 @@ mod tests {
         assert!(pattern.filter_file_path(Path::new("package.json")));
     }
 
-    // This test is very slow the first time... it clones and compiles the tree sitter grammar...
     #[test]
     fn matches_for_tree() {
         let pattern = create_pattern(
             r#"
-            parser = { url = "https://github.com/tree-sitter/tree-sitter-rust" }
+            parser = { precompiled = "rust" }
             file = { file_types = ["rs"], exact_file_name = ["package.json"] }
             [[pattern]]
             kind="struct"
@@ -972,7 +971,7 @@ struct Bar;
     fn nested_matches() {
         let pattern = create_pattern(
             r#"
-            parser = { url = "https://github.com/tree-sitter/tree-sitter-rust" }
+            parser = { precompiled = "rust" }
             file = { file_types = ["rs"], exact_file_name = ["package.json"] }
             [[pattern]]
             kind="fn"
@@ -1073,7 +1072,7 @@ fn main() {
     fn matches_with_multiple_ranges() {
         let pattern = create_pattern(
             r#"
-            parser = { url = "https://github.com/tree-sitter/tree-sitter-rust" }
+            parser = { precompiled = "rust" }
             file = { file_types = ["rs"], exact_file_name = ["package.json"] }
             [[pattern]]
             kind="fn"
