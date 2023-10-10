@@ -6,8 +6,10 @@
 [![Crates Status](https://img.shields.io/crates/v/intelligit.svg)](https://crates.io/crates/intelligit)
 
 ## How does it work
-Intelligit uses [patterns](docs/PATTERNS.md) to find meaningful symbols in the source code and tracks changes in the symbols.
+Intelligit uses [patterns](docs/PATTERN.md) to find meaningful symbols in the source code and tracks changes in the symbols.
 The patterns use [tree-sitter](https://github.com/tree-sitter/tree-sitter).
+
+## 
 
 todo: Better explanation
 
