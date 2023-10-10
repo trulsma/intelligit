@@ -19,6 +19,7 @@ impl log::Log for Logger {
         true
     }
 
+    // TODO: Simplifiy target. The part gets quite ugly
     fn log(&self, record: &log::Record<'_>) {
         match (record.file(), record.line()) {
             (Some(file), Some(line)) => {

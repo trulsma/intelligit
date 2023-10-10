@@ -340,7 +340,7 @@ fn diff_matches(
     let mut lhs_unchanged: HashSet<_> =
         HashSet::from_iter(lhs.into_iter().map(PatternMatchWithHash));
 
-    // Can be done in a single pass.. TODO: fix
+    // Can be done in a single pass..
     let mut rhs_changed = HashSet::new();
     for line in novel_rhs {
         // TODO: Change so all of rhs is not iterated through

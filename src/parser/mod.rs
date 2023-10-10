@@ -30,10 +30,10 @@ pub struct PatternMatch {
     pub kind: Kind,
     pub qualifiers: Qualifiers,
     pub full_qualifiers: Qualifiers,
-    // We need might need to merge ranges of different matches so ranges must be mutable, although
-    // should use tinyvec instead of vec since almost all will have 1 element
+    // Most of the time it will only contain a single element. tiny vec would be better but the
+    // performance difference is probably miniscule
     pub ranges: RefCell<Vec<tree_sitter::Range>>,
-    pub parent: Option<Rc<PatternMatch>>, // Do we need arc? vs, rc? mutability is not need though
+    pub parent: Option<Rc<PatternMatch>>,
     pub hidden: bool,
 }
 
@@ -47,7 +47,7 @@ impl PatternMatch {
     }
 
     pub fn add_range(&self, range: tree_sitter::Range) {
-        // Should also probably try to merge the range with existing range if it is overlapping
+        // TODO: Should also probably try to merge the range with existing range if it is overlapping
         self.ranges.borrow_mut().push(range);
     }
 

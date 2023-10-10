@@ -26,13 +26,15 @@ pub enum TSParser {
         src_path: Option<String>,
     },
 
-    /// Precompiled parser are included in the binary too avoid needing to compile parser when only
-    /// using default patterns
+    /// Precompiled parser are included in the binary to avoid needing to compile parser when only
+    /// using core patterns
     Precompiled { precompiled: String },
 }
 
 impl TSParser {
-    // TODO: need to have multiple hashes. One for source and one for (shared lib)
+    // TODO: need to have multiple hashes. One for source and one for compiled version. This is
+    // needed cause the source can be same for multiple parser. e.g OCaml repo contains both .ml and
+    // .mli. We should avoid cloning multiple times..
     fn hash(&self) -> Sha1Digest {
         let bytes = match self {
             Self::Remote { url, .. } => url.as_bytes(),
