@@ -17,7 +17,9 @@ todo: Better explanation
 
 Using a pattern requires having the tree-sitter parser compiled. Intelligit will clone and compile the tree-sitter parser but requires that a c compiler is installed.
 
-todo: Actual install steps
+```
+cargo install intelligit
+```
 
 ## Project Status
 Intelligit is currently in its early stages of development, and the project's direction is open to exploration.
