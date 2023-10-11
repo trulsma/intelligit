@@ -28,7 +28,7 @@ pub(crate) fn handle_history_subcommand(
     global_opts: &GlobalOpts,
 ) -> anyhow::Result<()> {
     match &command.subcommand {
-        HistorySubcommands::Inspect(args) => inspect_histry(args, &command.opts, global_opts),
+        HistorySubcommands::Inspect(args) => inspect_history(args, &command.opts, global_opts),
         HistorySubcommands::Commits(args) => list_commits(args, &command.opts, global_opts),
         HistorySubcommands::Build(args) => build_history(args, &command.opts, global_opts),
         HistorySubcommands::Changes => list_changes(&command.opts, global_opts),
@@ -123,17 +123,43 @@ fn list_commits(
     }
 }
 
-fn inspect_histry(
+fn inspect_history(
     args: &InspectHistoryArgs,
     history_opts: &HistoryOpts,
     _global_opts: &GlobalOpts,
 ) -> anyhow::Result<()> {
+    if let (None, None, None) = (&args.file, &args.kind, &args.qualifiers) {
+        anyhow::bail!("file, kind or qualifier must be set.");
+    }
+
     let datastore = datastore::open(&history_opts.datastore_path)?;
 
-    let symbol = datastore::Symbol {
-        kind: args.kind.clone(),
-        file_path: args.file.clone(),
-        qualifiers: args.qualifiers.clone(),
+    let symbols = datastore::query_symbols(
+        &datastore,
+        args.file.as_deref(),
+        args.kind.as_deref(),
+        args.qualifiers.as_deref(),
+    )?;
+
+    let symbol = match &symbols[..] {
+        [symbol] => symbol.clone(),
+        [] => {
+            println!("Found no symbols..");
+            return Ok(());
+        },
+        symbols => {
+            println!("Found more than one symbol..");
+            for symbol in symbols {
+                println!(
+                    "{} {} {}",
+                    symbol.kind.bright_blue(),
+                    symbol.qualifiers.bright_yellow(),
+                    symbol.file_path.bright_black()
+                );
+            }
+
+            return Ok(());
+        }
     };
 
     // let mut changes = datastore::changes_for_symbol(&datastore, &symbol)?;

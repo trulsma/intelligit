@@ -134,12 +134,12 @@ pub(crate) struct BuildHistoryArgs {
 
 #[derive(Debug, clap::Args)]
 pub(crate) struct InspectHistoryArgs {
-    #[clap(long, short = 'f')]
-    pub(crate) file: String,
-    #[clap(long, short = 'k', default_value = "file")]
-    pub(crate) kind: String,
-    #[clap(long, short = 'q', default_value = "")]
-    pub(crate) qualifiers: String,
+    #[clap(long, short = 'f', default_value = None)]
+    pub(crate) file: Option<String>,
+    #[clap(long, short = 'k', default_value = None)]
+    pub(crate) kind: Option<String>,
+    #[clap(long, short = 'q', default_value = None)]
+    pub(crate) qualifiers: Option<String>,
 }
 
 #[derive(Debug, Args)]
