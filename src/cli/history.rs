@@ -162,7 +162,6 @@ fn inspect_history(
         }
     };
 
-    // let mut changes = datastore::changes_for_symbol(&datastore, &symbol)?;
     let changes = datastore::query_changes(&datastore)?;
 
     let mut all_commits = changes
@@ -176,7 +175,7 @@ fn inspect_history(
         .filter(|change| change.symbol == symbol)
         .collect_vec();
 
-    symbol_changes.sort_by_key(|change| std::cmp::Reverse(change.commit.seconds_since_epoch));
+    symbol_changes.sort_by_key(|change| change.commit.seconds_since_epoch);
     all_commits.sort_by_key(|commit| commit.seconds_since_epoch);
 
     let Some(first_symbol_change) = symbol_changes.first() else {
