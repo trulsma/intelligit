@@ -5,6 +5,10 @@
 ![License](https://img.shields.io/crates/l/intelligit.svg)
 [![Crates Status](https://img.shields.io/crates/v/intelligit.svg)](https://crates.io/crates/intelligit)
 
+### Show symbols in status 
+
+![intelligit status](docs/status.gif)
+
 ## How does it work
 Intelligit uses [patterns](docs/PATTERN.md) to find meaningful symbols in the source code and tracks changes in the symbols.
 The patterns use [tree-sitter](https://github.com/tree-sitter/tree-sitter).
