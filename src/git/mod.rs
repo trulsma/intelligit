@@ -360,6 +360,10 @@ pub struct IndexEntryList<'a> {
 }
 
 impl<'a> IndexEntryList<'a> {
+    pub fn new_empty() -> Self {
+        IndexEntryList { entries: HashMap::new() }
+    }
+
     fn from_repository(repo: &'a gix::Repository) -> Option<Self> {
         let index = repo.index().ok()?;
         let index_clone = index.clone();
@@ -401,6 +405,10 @@ pub struct TreeEntryList<'a> {
 }
 
 impl<'a> TreeEntryList<'a> {
+    pub fn new_empty() -> Self {
+        TreeEntryList { entries: HashMap::new() }
+    }
+
     fn new(repo: &'a gix::Repository, tree: gix::Tree) -> Self {
         let mut recorder = gix::traverse::tree::Recorder::default();
 

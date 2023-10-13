@@ -1,6 +1,6 @@
 use crate::cli::command::{GlobalOpts, StatusArgs};
 use crate::diff;
-use crate::git;
+use crate::git::{self, IndexEntryList, TreeEntryList};
 use crate::git::RepositoryExt;
 use crate::parser::{PatternList, PatternListMatcher, PatternMatch};
 use anyhow::Context;
@@ -14,11 +14,9 @@ pub(crate) fn print_status(args: &StatusArgs, global_opts: &GlobalOpts) -> anyho
         .untracked_entries()
         .context("Found no local file entries..")?;
 
-    let staged_entries = repo.staged_entries().context("Found no index..")?;
+    let staged_entries = repo.staged_entries().unwrap_or_else(IndexEntryList::new_empty);
 
-    let head_entries = repo
-        .commit_entries(&repo.head_commit().context("Found no head commit..")?)
-        .context("Found no commit entries..")?;
+    let head_entries = repo.head_commit().ok().and_then(|commit| repo.commit_entries(&commit)).unwrap_or_else(TreeEntryList::new_empty);
 
     let staged_untracked_diff: Vec<_> = git::diff(&staged_entries, &untracked_entries).collect();
     let head_staged_diff: Vec<_> = git::diff(&head_entries, &staged_entries).collect();
