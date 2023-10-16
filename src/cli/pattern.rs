@@ -33,8 +33,7 @@ pub(crate) fn load_patterns_from_opts(
 ) -> anyhow::Result<()> {
     if !global_opts.no_default_patterns {
         let load_pattern_results = matcher
-            .load_default_patterns()
-            .context("Failed to load core patterns")?;
+            .load_default_patterns();
 
         crate::cli::pattern::print_load_pattern_results(load_pattern_results);
     }

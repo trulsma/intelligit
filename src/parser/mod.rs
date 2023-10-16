@@ -623,7 +623,7 @@ impl PatternListMatcher {
         Ok(results)
     }
 
-    pub fn load_default_patterns(&mut self) -> Result<Vec<LoadPatternResult>, LoadPatternsError> {
+    pub fn load_default_patterns(&mut self) -> Vec<LoadPatternResult> {
         let patterns = [
             ("rust", include_str!("../../patterns/rust.toml")),
             ("csharp", include_str!("../../patterns/csharp.toml")),
@@ -633,7 +633,7 @@ impl PatternListMatcher {
             ("json", include_str!("../../patterns/json.toml")),
         ];
 
-        let results = patterns
+        patterns
             .into_iter()
             .map(|(name, pattern)| {
                 let identifier = PatternIdentifier::Default { name: name.into() };
@@ -651,9 +651,7 @@ impl PatternListMatcher {
 
                 (PatternIdentifier::Default { name: name.into() }, result)
             })
-            .collect();
-
-        Ok(results)
+            .collect()
     }
 
     pub fn pattern_for_file_path(&self, file_path: &str) -> Option<&'_ PatternList> {
