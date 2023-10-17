@@ -1,4 +1,6 @@
 mod provider;
+pub mod diff;
+pub mod symbol;
 use itertools::Itertools;
 use provider::TSLanguageProvider;
 pub use provider::TSParser;
@@ -74,6 +76,7 @@ impl PatternMatch {
             .sum()
     }
 
+    #[allow(dead_code)]
     pub fn range_first_byte(&self) -> usize {
         self.ranges
             .borrow()

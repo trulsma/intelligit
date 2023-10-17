@@ -1,12 +1,7 @@
-use std::{
-    collections::{hash_map::Entry, HashMap},
-    path::PathBuf,
-    rc::Rc,
-};
+use std::path::PathBuf;
 
-use crate::diff;
-use crate::git;
-use crate::parser::{PatternListMatcher, PatternMatch};
+use crate::parser::PatternListMatcher;
+use crate::{git, parser::symbol::SymbolChange};
 use anyhow::Context;
 use colored::Colorize;
 use git::RepositoryExt;
@@ -14,12 +9,7 @@ use itertools::Itertools;
 
 use crate::cli::command::{DiffCommand, GlobalOpts};
 
-struct MatchWithNovelLines {
-    lhs_match: Option<Rc<PatternMatch>>,
-    rhs_match: Option<Rc<PatternMatch>>,
-    novel_lhs: Vec<u32>,
-    novel_rhs: Vec<u32>,
-}
+use super::command::OutputFormat;
 
 pub(crate) fn handle_diff_command(
     command: DiffCommand,
@@ -79,6 +69,83 @@ pub(crate) fn handle_diff_command(
     let mut matcher = PatternListMatcher::new(PathBuf::from(&global_opts.parser_path));
     crate::cli::pattern::load_patterns_from_opts(&mut matcher, global_opts)?;
 
+    let mut symbols = vec![];
+
+    for change in diff {
+        match change {
+            git::DiffResult::Added { path, content } => {
+                symbols.extend(crate::parser::diff::diff_file(
+                    &path,
+                    &matcher,
+                    None,
+                    Some(&content),
+                    command.include_children,
+                )?)
+            }
+            git::DiffResult::Deleted { path, content } => {
+                symbols.extend(crate::parser::diff::diff_file(
+                    &path,
+                    &matcher,
+                    Some(&content),
+                    None,
+                    command.include_children,
+                )?)
+            }
+            git::DiffResult::Modified {
+                path,
+                before_content,
+                after_content,
+            } => symbols.extend(crate::parser::diff::diff_file(
+                &path,
+                &matcher,
+                Some(&before_content),
+                Some(&after_content),
+                command.include_children,
+            )?),
+        }
+    }
+
+    match global_opts.format {
+        OutputFormat::Json => {
+            println!("{}", serde_json::to_string_pretty(&symbols)?);
+        }
+        OutputFormat::Text => {
+            for (file_change, changes) in
+                crate::parser::symbol::group_symbol_changes_by_files(symbols)
+            {
+                let (op, path) = match file_change {
+                    SymbolChange::Added { symbol, .. } => ("+".green(), symbol.file_path),
+                    SymbolChange::Modified { symbol, .. } => ("~".purple(), symbol.file_path),
+                    SymbolChange::Deleted { symbol, .. } => ("-".bright_red(), symbol.file_path),
+                };
+                println!("{} {}", op, path.bright_black());
+                for change in changes {
+                    match change {
+                        SymbolChange::Added { symbol, .. } => println!(
+                            "  {} {} {}",
+                            "+".green(),
+                            symbol.kind.bright_blue(),
+                            symbol.qualifiers.bright_yellow(),
+                        ),
+                        SymbolChange::Deleted { symbol, .. } => println!(
+                            "  {} {} {}",
+                            "-".bright_red(),
+                            symbol.kind.bright_blue(),
+                            symbol.qualifiers.bright_yellow(),
+                        ),
+                        SymbolChange::Modified { symbol, .. } => println!(
+                            "  {} {} {}",
+                            "~".purple(),
+                            symbol.kind.bright_blue(),
+                            symbol.qualifiers.bright_yellow(),
+                        ),
+                    }
+                }
+            }
+        }
+    }
+
+    /*
     for change in diff {
         match change {
             git::DiffResult::Added { path, content } => {
@@ -183,7 +250,7 @@ pub(crate) fn handle_diff_command(
                         }
                     }
 
-                    let mut changes: HashMap<_, _> = lhs
+                   let mut changes: HashMap<_, _> = lhs
                         .into_iter()
                         .map(|(mtch, novel)| {
                             (
@@ -230,7 +297,9 @@ pub(crate) fn handle_diff_command(
                         let op = match (&change.lhs_match, &change.rhs_match) {
                             (None, Some(_)) => "+".green(),
                             (Some(_), None) => "-".red(),
-                            (_, _) => "~".purple(),
+                            (Some(_), Some(_)) => "~".purple(),
+                            (None, None) => unreachable!()
+
                         };
                         let novel_lhs_count = change.novel_lhs.len();
                         let novel_rhs_count = change.novel_rhs.len();
@@ -255,7 +324,7 @@ pub(crate) fn handle_diff_command(
                 }
             }
         }
-    }
+    }*/
 
     Ok(())
 }

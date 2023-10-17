@@ -23,10 +23,20 @@ impl From<LogLevel> for log::LevelFilter {
     }
 }
 
+#[derive(Debug, clap::ValueEnum, Clone, Copy)]
+pub enum OutputFormat {
+    /// Human readable text
+    Text,
+    /// Json
+    Json
+}
+
 #[derive(Debug, Args)]
 pub(crate) struct GlobalOpts {
+    /// Color output. Ignored if format is not 'text'
     #[clap(long, global = true, default_value_t = ColorChoice::Auto)]
     pub(crate) color: ColorChoice,
+
     /// Directory to look for and store parsers
     #[clap(long = "parsers", global = true, default_value = ".intelligit")]
     pub(crate) parser_path: String,
@@ -41,6 +51,10 @@ pub(crate) struct GlobalOpts {
 
     #[clap(long = "log", global = true, default_value = "error")]
     pub(crate) loglevel: LogLevel,
+
+    /// Output format
+    #[clap(long, global = true, default_value = "text")]
+    pub(crate) format: OutputFormat
 }
 
 #[derive(Debug, Parser)]
@@ -57,6 +71,13 @@ pub(crate) struct App {
 pub(crate) struct StatusArgs {
     #[clap(default_value = "./")]
     pub(crate) repo: String,
+
+    /// Include match if children is changed
+    #[arg(long, default_value_t = false)]
+    pub include_children: bool,
+
+    // Possible arguments: expand_added_files, expand_deleted_files (dont show matches for some
+    // files to avoid too long status output?)
 }
 
 #[derive(Debug, clap::Subcommand)]
@@ -98,10 +119,6 @@ pub(crate) struct DiffCommand {
     /// Include match if children is changed
     #[arg(long, default_value_t = false)]
     pub include_children: bool,
-
-    /// How to display diff results
-    #[arg(long, short, default_value = "minimal")]
-    pub format: DiffFormat,
 }
 
 #[derive(Debug, clap::ValueEnum, Clone, Copy)]
