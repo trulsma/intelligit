@@ -1,3 +1,4 @@
+use gix::bstr::ByteSlice;
 use itertools::Itertools;
 use std::{
     collections::{hash_map::Entry, HashMap},
@@ -20,13 +21,13 @@ pub fn diff_file(
 ) -> anyhow::Result<Vec<SymbolChange>> {
     let Some(pattern) = matcher.pattern_for_file_path(file_path) else {
         let file_symbol_change = match (before, after) {
-            (Some(before), None) => SymbolChange::Added {
+            (Some(before), None) => SymbolChange::Deleted {
                 symbol: Symbol {
                     kind: "file".into(),
                     qualifiers: "".into(),
                     file_path: file_path.into(),
                 },
-                novel_rhs: String::from_utf8(before.to_vec()).unwrap().lines().count(),
+                novel_lhs: before.lines().count(),
             },
             (None, Some(after)) => SymbolChange::Added {
                 symbol: Symbol {
@@ -34,7 +35,7 @@ pub fn diff_file(
                     qualifiers: "".into(),
                     file_path: file_path.into(),
                 },
-                novel_rhs: String::from_utf8(after.to_vec())?.lines().count(),
+                novel_rhs: after.lines().count(),
             },
             (Some(before), Some(after)) => {
                 let (novel_lhs, novel_rhs) = crate::diff::diff(before, after);
