@@ -634,6 +634,7 @@ impl PatternListMatcher {
             ("ocaml", include_str!("../../patterns/ocaml.toml")),
             ("toml", include_str!("../../patterns/toml.toml")),
             ("json", include_str!("../../patterns/json.toml")),
+            ("lua", include_str!("../../patterns/lua.toml")),
         ];
 
         patterns

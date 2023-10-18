@@ -148,6 +148,7 @@ impl TSLanguageProvider {
             "ocaml" =>  Ok(tree_sitter_ocaml::language_ocaml()),
             "ocaml_interface" =>  Ok(tree_sitter_ocaml::language_ocaml_interface()),
             "go" =>  Ok(tree_sitter_go::language()),
+            "lua" =>  Ok(tree_sitter_lua::language()),
             name => anyhow::bail!("\"{}\" is not a precompiled parser. Make sure it is spelled correctly and is contained in the list of precompiled parser", name)
         };
 

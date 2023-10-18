@@ -1,0 +1,41 @@
+parser = { precompiled = "lua" }
+
+[qualifier]
+seperator = "."
+
+[file]
+file_types = ["lua"]
+
+[[pattern]]
+kind = "function"
+query = """
+(table_constructor
+  (field
+    name: (identifier) @name
+    value: (function_definition))) @function
+"""
+range_capture = ["function"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "function"
+query = """
+(function_declaration
+  name: (method_index_expression
+    method: (identifier) @name)) @function
+"""
+range_capture = ["function"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "function"
+query = """
+(function_declaration
+  name: [
+    (identifier) @name
+    (dot_index_expression
+      field: (identifier) @name)
+  ]) @function
+"""
+range_capture = ["function"]
+identifier_capture = ["name"]

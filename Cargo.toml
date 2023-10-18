@@ -37,6 +37,7 @@ tree-sitter-json = "0.20.1"
 tree-sitter-toml = "0.20.0"
 tree-sitter-ocaml = "0.20.4"
 tree-sitter-go = "0.20.0"
+tree-sitter-lua = "0.0.19"
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"
