@@ -39,3 +39,19 @@ query = """
 """
 range_capture = ["function"]
 identifier_capture = ["name"]
+
+[[pattern]]
+kind = "function"
+query = """
+(assignment_statement
+  (variable_list .
+    name: [
+      (identifier) @name
+      (dot_index_expression
+        field: (identifier) @name)
+    ])
+  (expression_list .
+    value: (function_definition))) @function
+"""
+range_capture = ["function"]
+identifier_capture = ["name"]
