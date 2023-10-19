@@ -130,6 +130,7 @@ pub fn symbol_commits(conn: &Connection, symbol: &Symbol) -> anyhow::Result<Vec<
     Ok(commits.collect())
 }
 
+#[allow(dead_code)]
 pub fn all_commits(conn: &Connection) -> anyhow::Result<Vec<Commit>> {
     let mut stmt = conn.prepare("select distinct commit_id, seconds_since_epoch from changes")?;
 
