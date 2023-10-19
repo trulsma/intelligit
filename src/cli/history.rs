@@ -1,5 +1,5 @@
 use crate::cli::command::{
-    BuildHistoryArgs, GlobalOpts, History, HistoryCommitsArgs, HistoryOpts, HistorySubcommands,
+    BuildHistoryArgs, GlobalOpts, History, HistoryOpts, HistorySubcommands,
     InspectHistoryArgs,
 };
 use crate::datastore;
@@ -9,7 +9,9 @@ use crate::parser::PatternListMatcher;
 use anyhow::{Context, Ok};
 use colored::Colorize;
 use git::{ChangeHistoryIterator, CommitExt, RepositoryExt};
+use gix::Repository;
 use itertools::Itertools;
+use rusqlite::Connection;
 use std::{
     collections::{HashMap, HashSet},
     path::PathBuf,
@@ -29,7 +31,6 @@ pub(crate) fn handle_history_subcommand(
 ) -> anyhow::Result<()> {
     match &command.subcommand {
         HistorySubcommands::Inspect(args) => inspect_history(args, &command.opts, global_opts),
-        HistorySubcommands::Commits(args) => list_commits(args, &command.opts, global_opts),
         HistorySubcommands::Build(args) => build_history(args, &command.opts, global_opts),
         HistorySubcommands::Changes => list_changes(&command.opts, global_opts),
     }
@@ -57,71 +58,26 @@ fn list_changes(history_opts: &HistoryOpts, _global_opts: &GlobalOpts) -> anyhow
     Ok(())
 }
 
-fn list_git_commits(args: &HistoryCommitsArgs, _global_opts: &GlobalOpts) -> anyhow::Result<()> {
-    fn without_trailing_newline(mut string: String) -> String {
-        if string.ends_with('\n') {
-            string.pop();
-            if string.ends_with('\r') {
-                string.pop();
-            }
-        }
-        string
+pub(crate) fn assert_history_updated(repository: &Repository, datastore: &Connection, allow_outdated: bool, allow_detached: bool) -> anyhow::Result<()> {
+    let head = repository.head()?;
+
+    if !allow_detached && head.is_detached() {
+        anyhow::bail!("HEAD is deatached and results will be wrong")
     }
-    let mut repo = git::open(args.repo.as_str()).context("Failed to get git repository")?;
 
-    repo.object_cache_size(Some(args.cache_size.as_u64() as usize));
-
-    let mut commit = repo.head_commit().context("Failed to get head commit")?;
-
-    loop {
-        let hash = commit.id().to_hex().to_string();
-        let time_format = time::macros::format_description!("[day].[month].[year]");
-        let time = commit.decode()?.author.time.format(time_format);
-        let message = commit.message()?;
-        println!(
-            "{} {} {}",
-            hash.bright_black(),
-            time.bright_blue(),
-            without_trailing_newline(message.title.to_string())
-        );
-
-        let Some(parent) = commit.parent() else { break };
-
-        commit = parent;
+    if !allow_outdated {
+        let anyhow::Result::Ok(Some(commit)) = datastore::latest_commit(datastore) else {
+            anyhow::bail!("History has not been built. Run 'intelligit history build'");
+        };
+        if commit.id.as_slice() != head.id().context("Failed to get id from head commit")?.as_bytes() {
+            anyhow::bail!("History is not updated. Run 'intelligit history build'");
+        }
     }
 
     Ok(())
 }
 
-fn list_datastore_commits(
-    _args: &HistoryCommitsArgs,
-    history_opts: &HistoryOpts,
-    _global_opts: &GlobalOpts,
-) -> anyhow::Result<()> {
-    let datastore = datastore::open(&history_opts.datastore_path)?;
 
-    for commit in datastore::all_commits(&datastore)? {
-        let hash = id_to_hex(&commit.id);
-        let time = commit.seconds_since_epoch.to_string();
-
-        println!("{} {}", hash.bright_black(), time.bright_blue());
-    }
-
-    Ok(())
-}
-
-fn list_commits(
-    args: &HistoryCommitsArgs,
-    history_opts: &HistoryOpts,
-    global_opts: &GlobalOpts,
-) -> anyhow::Result<()> {
-    match args.location {
-        crate::cli::command::CommitLocation::Git => list_git_commits(args, global_opts),
-        crate::cli::command::CommitLocation::Datastore => {
-            list_datastore_commits(args, history_opts, global_opts)
-        }
-    }
-}
 
 fn inspect_history(
     args: &InspectHistoryArgs,

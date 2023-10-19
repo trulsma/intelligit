@@ -1,5 +1,6 @@
 pub mod command;
 pub mod diff;
+pub mod commits;
 pub mod history;
 pub mod logger;
 pub mod pattern;
@@ -13,6 +14,7 @@ use history::handle_history_subcommand;
 use pattern::handle_pattern_subcommand;
 use symbols::print_symbols;
 use status::print_status;
+use commits::handle_log_command;
 
 fn list_parsers(_global_opts: &GlobalOpts) -> anyhow::Result<()> {
     todo!("List parsers")
@@ -47,5 +49,6 @@ pub fn main_impl() -> anyhow::Result<()> {
         }
         Subcommands::Parser(ParserSubcommands::List) => list_parsers(&args.global_opts),
         Subcommands::Diff(command) => handle_diff_command(command, &args.global_opts),
+        Subcommands::Log(command) => handle_log_command(command, &args.global_opts),
     }
 }

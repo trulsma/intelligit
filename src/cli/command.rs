@@ -103,6 +103,10 @@ pub(crate) enum Subcommands {
 
     /// Diff to commits
     Diff(DiffCommand),
+
+    /// Find commits for a symbol
+    Log(LogCommand),
+
 }
 
 #[derive(Debug, clap::ValueEnum, Clone, Copy)]
@@ -121,23 +125,6 @@ pub(crate) struct DiffCommand {
     pub include_children: bool,
 }
 
-#[derive(Debug, clap::ValueEnum, Clone, Copy)]
-pub(crate) enum CommitLocation {
-    Datastore,
-    Git,
-    // Both
-}
-
-#[derive(Debug, clap::Args)]
-pub(crate) struct HistoryCommitsArgs {
-    #[clap(default_value = "./")]
-    pub(crate) repo: String,
-    #[clap(long, default_value_t = bytesize::ByteSize::mb(200))]
-    pub(crate) cache_size: bytesize::ByteSize,
-    #[clap(long, short = 'l', default_value = "git")]
-    pub(crate) location: CommitLocation,
-}
-
 #[derive(Debug, clap::Args)]
 pub(crate) struct BuildHistoryArgs {
     #[clap(default_value = "./")]
@@ -150,6 +137,13 @@ pub(crate) struct BuildHistoryArgs {
 }
 
 #[derive(Debug, clap::Args)]
+pub(crate) struct DatastoreOpts {
+    /// Directory to store and query data
+    #[clap(long = "datastore", global = true, default_value = ".intelligit")]
+    pub(crate) datastore_path: String,
+}
+
+#[derive(Debug, clap::Args)]
 pub(crate) struct InspectHistoryArgs {
     #[clap(long, short = 'f', default_value = None)]
     pub(crate) file: Option<String>,
@@ -157,7 +151,21 @@ pub(crate) struct InspectHistoryArgs {
     pub(crate) kind: Option<String>,
     #[clap(long, short = 'q', default_value = None)]
     pub(crate) qualifiers: Option<String>,
+
 }
+
+#[derive(Debug, clap::Args)]
+pub(crate) struct LogCommand {
+    #[clap(long, short = 'f', default_value = None)]
+    pub(crate) file: Option<String>,
+    #[clap(long, short = 'k', default_value = None)]
+    pub(crate) kind: Option<String>,
+    #[clap(long, short = 'q', default_value = None)]
+    pub(crate) qualifiers: Option<String>,
+    #[clap(flatten)]
+    pub(crate) datastore_opts: DatastoreOpts,
+}
+
 
 #[derive(Debug, Args)]
 pub(crate) struct History {
@@ -176,8 +184,6 @@ pub(crate) struct HistoryOpts {
 
 #[derive(Debug, clap::Subcommand)]
 pub(crate) enum HistorySubcommands {
-    /// List all commits
-    Commits(HistoryCommitsArgs),
     /// Build the history
     Build(BuildHistoryArgs),
     /// Inspect history for a symbol

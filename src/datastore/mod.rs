@@ -112,7 +112,6 @@ pub fn earliest_commit(conn: &Connection) -> anyhow::Result<Option<Commit>> {
     .optional()?)
 }
 
-#[allow(dead_code)]
 pub fn symbol_commits(conn: &Connection, symbol: &Symbol) -> anyhow::Result<Vec<Commit>> {
     let mut stmt = conn.prepare("select distinct commit_id, seconds_since_epoch from changes where kind = ?1 and qualifiers = ?2 and file_path = ?3")?;
 
