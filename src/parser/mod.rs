@@ -1,5 +1,5 @@
-mod provider;
 pub mod diff;
+mod provider;
 pub mod symbol;
 use itertools::Itertools;
 use provider::TSLanguageProvider;
@@ -58,6 +58,13 @@ impl PatternMatch {
             .borrow()
             .iter()
             .any(|range| range.start_point.row <= line && range.end_point.row >= line)
+    }
+
+    pub fn contains_point(&self, point: tree_sitter::Point) -> bool {
+        self.ranges
+            .borrow()
+            .iter()
+            .any(|range| range.start_point <= point && range.end_point >= point)
     }
 
     pub fn range_line_count(&self) -> usize {

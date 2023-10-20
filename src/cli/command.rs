@@ -28,7 +28,7 @@ pub enum OutputFormat {
     /// Human readable text
     Text,
     /// Json
-    Json
+    Json,
 }
 
 #[derive(Debug, Args)]
@@ -54,7 +54,7 @@ pub(crate) struct GlobalOpts {
 
     /// Output format
     #[clap(long, global = true, default_value = "text")]
-    pub(crate) format: OutputFormat
+    pub(crate) format: OutputFormat,
 }
 
 #[derive(Debug, Parser)]
@@ -75,7 +75,6 @@ pub(crate) struct StatusArgs {
     /// Include match if children is changed
     #[arg(long, default_value_t = false)]
     pub include_children: bool,
-
     // Possible arguments: expand_added_files, expand_deleted_files (dont show matches for some
     // files to avoid too long status output?)
 }
@@ -106,7 +105,6 @@ pub(crate) enum Subcommands {
 
     /// Find commits for a symbol
     Log(LogCommand),
-
 }
 
 #[derive(Debug, clap::ValueEnum, Clone, Copy)]
@@ -151,7 +149,6 @@ pub(crate) struct InspectHistoryArgs {
     pub(crate) kind: Option<String>,
     #[clap(long, short = 'q', default_value = None)]
     pub(crate) qualifiers: Option<String>,
-
 }
 
 #[derive(Debug, clap::Args)]
@@ -162,10 +159,13 @@ pub(crate) struct LogCommand {
     pub(crate) kind: Option<String>,
     #[clap(long, short = 'q', default_value = None)]
     pub(crate) qualifiers: Option<String>,
+    #[clap(long, short ='c', default_value = None)]
+    pub(crate) column: Option<usize>,
+    #[clap(long, short = 'r', default_value = None)]
+    pub(crate) row: Option<usize>,
     #[clap(flatten)]
     pub(crate) datastore_opts: DatastoreOpts,
 }
-
 
 #[derive(Debug, Args)]
 pub(crate) struct History {

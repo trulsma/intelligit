@@ -5,7 +5,7 @@ use itertools::Itertools;
 use super::{PatternMatch, PatternList};
 
 
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize)]
 pub struct Symbol {
     pub kind: String,
     pub qualifiers: String,
@@ -24,7 +24,7 @@ impl Symbol {
     }
 }
 
-#[derive(serde::Serialize)]
+#[derive(Debug, serde::Serialize)]
 #[serde(tag = "change", rename_all = "lowercase")]
 pub enum SymbolChange {
     Added {

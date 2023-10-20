@@ -58,6 +58,7 @@ fn list_changes(history_opts: &HistoryOpts, _global_opts: &GlobalOpts) -> anyhow
     Ok(())
 }
 
+#[allow(dead_code)]
 pub(crate) fn assert_history_updated(repository: &Repository, datastore: &Connection, allow_outdated: bool, allow_detached: bool) -> anyhow::Result<()> {
     let head = repository.head()?;
 
