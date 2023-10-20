@@ -45,6 +45,10 @@ pub(crate) struct GlobalOpts {
     #[clap(long = "patterns", global = true, default_value = None)]
     pub(crate) patterns_path: Option<String>,
 
+    /// Directory to store and query data
+    #[clap(long = "datastore", global = true, default_value = ".intelligit")]
+    pub(crate) datastore_path: String,
+
     /// Skip loading default patterns
     #[clap(long, global = true, default_value_t = false)]
     pub(crate) no_default_patterns: bool,
@@ -135,13 +139,6 @@ pub(crate) struct BuildHistoryArgs {
 }
 
 #[derive(Debug, clap::Args)]
-pub(crate) struct DatastoreOpts {
-    /// Directory to store and query data
-    #[clap(long = "datastore", global = true, default_value = ".intelligit")]
-    pub(crate) datastore_path: String,
-}
-
-#[derive(Debug, clap::Args)]
 pub(crate) struct InspectHistoryArgs {
     #[clap(long, short = 'f', default_value = None)]
     pub(crate) file: Option<String>,
@@ -149,6 +146,10 @@ pub(crate) struct InspectHistoryArgs {
     pub(crate) kind: Option<String>,
     #[clap(long, short = 'q', default_value = None)]
     pub(crate) qualifiers: Option<String>,
+    #[clap(long, short ='c', default_value = None)]
+    pub(crate) column: Option<usize>,
+    #[clap(long, short = 'r', default_value = None)]
+    pub(crate) row: Option<usize>,
 }
 
 #[derive(Debug, clap::Args)]
@@ -163,8 +164,6 @@ pub(crate) struct LogCommand {
     pub(crate) column: Option<usize>,
     #[clap(long, short = 'r', default_value = None)]
     pub(crate) row: Option<usize>,
-    #[clap(flatten)]
-    pub(crate) datastore_opts: DatastoreOpts,
 }
 
 #[derive(Debug, Args)]

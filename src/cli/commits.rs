@@ -1,77 +1,34 @@
-use std::path::PathBuf;
 
 use colored::Colorize;
 
-use crate::{
-    datastore, git,
-    parser::{symbol::Symbol, PatternListMatcher},
-};
+use crate::{datastore, git, parser::symbol::Symbol};
 
 use super::{
     command::{GlobalOpts, LogCommand, OutputFormat},
-    symbols::find_symbol_by_file_and_location,
+    symbols::{find_symbol, SymbolFilter},
 };
 
 pub(crate) fn handle_log_command(
     command: LogCommand,
     global_opts: &GlobalOpts,
 ) -> anyhow::Result<()> {
-    let datastore = datastore::open(&command.datastore_opts.datastore_path)?;
+    let datastore = datastore::open(&global_opts.datastore_path)?;
 
     let repo = git::open("./")?;
     // crate::cli::history::assert_history_updated(&repo, &datastore, false, false)?;
 
-    let symbol = match (
-        command.file.as_deref(),
-        command.kind.as_deref(),
-        command.qualifiers.as_deref(),
-        command.row,
-        command.column,
-    ) {
-        (Some(file), None, None, Some(row), Some(column)) => {
-            let mut matcher = PatternListMatcher::new(PathBuf::from(&global_opts.parser_path));
-            crate::cli::pattern::load_patterns_from_opts(&mut matcher, global_opts)?;
-            let location = tree_sitter::Point { row, column };
-            find_symbol_by_file_and_location(file, location, &matcher)?
-        }
-        (Some(_), None, None, Some(_), _) | (Some(_), None, None, _, Some(_)) => {
-            anyhow::bail!("Both row and column must be set.")
-        }
-        (None, None, None, _, _) => anyhow::bail!("file, kind or qualifier must be set."),
-        (None, _, _, Some(_), _) | (None, _, _, _, Some(_)) => {
-            anyhow::bail!("row and column can only be used in combination with file")
-        }
-        (Some(_), _, _, Some(_), _) | (Some(_), _, _, _, Some(_)) => {
-            anyhow::bail!("kind or qualifiers can not be used in combination with row and column")
-        }
-        (file, kind, qualifiers, None, None) => {
-            let symbols = datastore::query_symbols(&datastore, file, kind, qualifiers)?;
-            match &symbols[..] {
-                [symbol] => Symbol {
-                    file_path: symbol.file_path.clone(),
-                    kind: symbol.kind.clone(),
-                    qualifiers: symbol.qualifiers.clone(),
-                },
-                [] => {
-                    println!("Found no symbols..");
-                    return Ok(());
-                }
-                symbols => {
-                    println!("Found more than one symbol..");
-                    for symbol in symbols {
-                        println!(
-                            "{} {} {}",
-                            symbol.kind.bright_blue(),
-                            symbol.qualifiers.bright_yellow(),
-                            symbol.file_path.bright_black()
-                        );
-                    }
-
-                    return Ok(());
-                }
-            }
-        }
-    };
+    let symbol = find_symbol(
+        SymbolFilter {
+            file_path: command.file.as_deref(),
+            kind: command.kind.as_deref(),
+            qualifiers: command.qualifiers.as_deref(),
+            row: command.row,
+            column: command.column,
+        },
+        None,
+        Some(&datastore),
+        global_opts,
+    )?;
 
     let Symbol {
         file_path,

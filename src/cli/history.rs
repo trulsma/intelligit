@@ -2,10 +2,12 @@ use crate::cli::command::{
     BuildHistoryArgs, GlobalOpts, History, HistoryOpts, HistorySubcommands,
     InspectHistoryArgs,
 };
+use crate::cli::symbols::{find_symbol, SymbolFilter};
 use crate::datastore;
 use crate::diff;
 use crate::git;
 use crate::parser::PatternListMatcher;
+use crate::parser::symbol::Symbol;
 use anyhow::{Context, Ok};
 use colored::Colorize;
 use git::{ChangeHistoryIterator, CommitExt, RepositoryExt};
@@ -83,40 +85,32 @@ pub(crate) fn assert_history_updated(repository: &Repository, datastore: &Connec
 fn inspect_history(
     args: &InspectHistoryArgs,
     history_opts: &HistoryOpts,
-    _global_opts: &GlobalOpts,
+    global_opts: &GlobalOpts,
 ) -> anyhow::Result<()> {
-    if let (None, None, None) = (&args.file, &args.kind, &args.qualifiers) {
-        anyhow::bail!("file, kind or qualifier must be set.");
-    }
-
     let datastore = datastore::open(&history_opts.datastore_path)?;
 
-    let symbols = datastore::query_symbols(
-        &datastore,
-        args.file.as_deref(),
-        args.kind.as_deref(),
-        args.qualifiers.as_deref(),
+    let symbol = find_symbol(
+        SymbolFilter {
+            file_path: args.file.as_deref(),
+            kind: args.kind.as_deref(),
+            qualifiers: args.qualifiers.as_deref(),
+            row: args.row,
+            column: args.column,
+        },
+        None,
+        Some(&datastore),
+        global_opts,
     )?;
 
-    let symbol = match &symbols[..] {
-        [symbol] => symbol.clone(),
-        [] => {
-            println!("Found no symbols..");
-            return Ok(());
-        },
-        symbols => {
-            println!("Found more than one symbol..");
-            for symbol in symbols {
-                println!(
-                    "{} {} {}",
-                    symbol.kind.bright_blue(),
-                    symbol.qualifiers.bright_yellow(),
-                    symbol.file_path.bright_black()
-                );
-            }
-
-            return Ok(());
-        }
+    let Symbol {
+        file_path,
+        kind,
+        qualifiers,
+    } = symbol;
+    let symbol = crate::datastore::Symbol {
+        file_path,
+        kind,
+        qualifiers,
     };
 
     let changes = datastore::query_changes(&datastore)?;
@@ -151,7 +145,7 @@ fn inspect_history(
         symbol_changes.len() as f32 / (all_commits.len() - symbol_introduction) as f32;
 
     println!(
-        "{} {} in {} has changes in {} commits, {:.2}% of total commits, {:.2}% of commits since introduction",
+        "{} {} in {} has changes in {} commit(s), {:.2}% of total commits, {:.2}% of commits since introduction",
         symbol.kind.bright_blue(),
         symbol.qualifiers.bright_yellow(),
         symbol.file_path.bright_black(),
@@ -159,19 +153,6 @@ fn inspect_history(
         percentage_of_total * 100.0,
         percentage_of_total_since_introduction * 100.0,
     );
-    for change in symbol_changes.iter() {
-        let hash = id_to_hex(&change.commit.id);
-        let time = change.commit.seconds_since_epoch.to_string();
-
-        println!(
-            "- {} {}, (-{}, +{}) -> {}",
-            hash.bright_black(),
-            time.bright_blue(),
-            change.novel_lhs.to_string().red(),
-            change.novel_rhs.to_string().green(),
-            change.size_after
-        );
-    }
 
     let mut other_symbols = HashMap::new();
 
