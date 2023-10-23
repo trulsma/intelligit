@@ -146,8 +146,10 @@ pub(crate) struct InspectHistoryArgs {
     pub(crate) kind: Option<String>,
     #[clap(long, short = 'q', default_value = None)]
     pub(crate) qualifiers: Option<String>,
+    /// Column of symbol, zero indexed
     #[clap(long, short ='c', default_value = None)]
     pub(crate) column: Option<usize>,
+    /// Row of symbol, zero indexed
     #[clap(long, short = 'r', default_value = None)]
     pub(crate) row: Option<usize>,
 }
@@ -160,8 +162,10 @@ pub(crate) struct LogCommand {
     pub(crate) kind: Option<String>,
     #[clap(long, short = 'q', default_value = None)]
     pub(crate) qualifiers: Option<String>,
+    /// Column of symbol, zero indexed
     #[clap(long, short ='c', default_value = None)]
     pub(crate) column: Option<usize>,
+    /// Row of symbol, zero indexed
     #[clap(long, short = 'r', default_value = None)]
     pub(crate) row: Option<usize>,
 }
