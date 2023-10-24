@@ -10,7 +10,7 @@ categories = ["command-line-utilities", "development-tools"]
 tree-sitter = "0.20.10"
 itertools = "0.11.0"
 serde = { version = "1.0.179", features = ["derive", "rc"] }
-gix = { version = "0.54.1", features = [
+gix = { version = "0.55.2", features = [
     "blocking-network-client",
     "blocking-http-transport-reqwest-native-tls",
 ] }
