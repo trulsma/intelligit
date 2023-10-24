@@ -643,6 +643,7 @@ impl PatternListMatcher {
             ("json", include_str!("../../patterns/json.toml")),
             ("lua", include_str!("../../patterns/lua.toml")),
             ("typescript", include_str!("../../patterns/typescript.toml")),
+            ("javascript", include_str!("../../patterns/javascript.toml")),
         ];
 
         patterns

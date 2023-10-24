@@ -150,6 +150,7 @@ impl TSLanguageProvider {
             "go" =>  Ok(tree_sitter_go::language()),
             "lua" =>  Ok(tree_sitter_lua::language()),
             "typescript" =>  Ok(tree_sitter_typescript::language_typescript()),
+            "javascript" =>  Ok(tree_sitter_javascript::language()),
             name => anyhow::bail!("\"{}\" is not a precompiled parser. Make sure it is spelled correctly and is contained in the list of precompiled parser", name)
         };
 

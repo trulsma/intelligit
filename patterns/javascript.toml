@@ -1,0 +1,34 @@
+parser = { precompiled = "javascript" }
+
+[qualifier]
+seperator = "."
+
+[file]
+file_types = ["js"]
+
+[[pattern]]
+kind = "function"
+query = """
+(function_declaration
+    name: (identifier) @name) @function
+"""
+range_capture = ["function"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "class"
+query = """
+(class_declaration
+    name: (identifier) @name) @class
+"""
+range_capture = ["class"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "method"
+query = """
+(method_definition
+    name: (_) @name) @method
+"""
+range_capture = ["method"]
+identifier_capture = ["name"]
