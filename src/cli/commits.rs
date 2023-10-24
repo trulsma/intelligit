@@ -1,4 +1,3 @@
-
 use colored::Colorize;
 
 use crate::{datastore, git, parser::symbol::Symbol};
@@ -41,8 +40,8 @@ pub(crate) fn handle_log_command(
         qualifiers,
     };
 
-    let mut commits = datastore::symbol_commits(&datastore, &symbol)?;
-    commits.sort_by_key(|c| std::cmp::Reverse(c.seconds_since_epoch));
+    let mut changes = datastore::changes_for_symbol(&datastore, &symbol)?;
+    changes.sort_by_key(|c| std::cmp::Reverse(c.commit.seconds_since_epoch));
 
     match global_opts.format {
         OutputFormat::Json => {
@@ -53,12 +52,15 @@ pub(crate) fn handle_log_command(
                 title: String,
                 body: Option<String>,
                 id: String,
+                novel_lhs: u32,
+                novel_rhs: u32,
+                size_after: u64,
             }
 
-            let output: anyhow::Result<Vec<_>> = commits
+            let output: anyhow::Result<Vec<_>> = changes
                 .into_iter()
-                .map(|db_commit| {
-                    let commit = repo.find_object(db_commit.id.as_slice())?.into_commit();
+                .map(|change| {
+                    let commit = repo.find_object(change.commit.id.as_slice())?.into_commit();
                     let time_format = time::macros::format_description!("[day].[month].[year]");
                     let time_formatted = commit.decode()?.author.time.format(time_format);
                     let message = commit.message()?;
@@ -69,12 +71,15 @@ pub(crate) fn handle_log_command(
                         id,
                         title,
                         body,
-                        seconds_since_epoch: db_commit.seconds_since_epoch,
+                        seconds_since_epoch: change.commit.seconds_since_epoch,
                         time_formatted,
+                        novel_lhs: change.novel_lhs,
+                        novel_rhs: change.novel_rhs,
+                        size_after: change.size_after
                     })
                 })
                 .collect();
-            print!("{}", serde_json::to_string_pretty(&output?)?);
+            println!("{}", serde_json::to_string_pretty(&output?)?);
         }
         OutputFormat::Text => {
             fn without_trailing_newline(mut string: String) -> String {
@@ -88,14 +93,14 @@ pub(crate) fn handle_log_command(
             }
 
             println!(
-                "{} {} {}",
+                "{} {} in {}",
                 symbol.kind.bright_blue(),
                 symbol.qualifiers.bright_yellow(),
                 symbol.file_path.bright_black()
             );
 
-            for commit in commits {
-                let commit = repo.find_object(commit.id.as_slice())?.into_commit();
+            for change in changes {
+                let commit = repo.find_object(change.commit.id.as_slice())?.into_commit();
                 let time_format = time::macros::format_description!("[day].[month].[year]");
                 let time = commit.decode()?.author.time.format(time_format);
                 let message = commit.message()?;

@@ -112,6 +112,7 @@ pub fn earliest_commit(conn: &Connection) -> anyhow::Result<Option<Commit>> {
     .optional()?)
 }
 
+#[allow(dead_code)]
 pub fn symbol_commits(conn: &Connection, symbol: &Symbol) -> anyhow::Result<Vec<Commit>> {
     let mut stmt = conn.prepare("select distinct commit_id, seconds_since_epoch from changes where kind = ?1 and qualifiers = ?2 and file_path = ?3")?;
 
@@ -146,7 +147,6 @@ pub fn all_commits(conn: &Connection) -> anyhow::Result<Vec<Commit>> {
     Ok(commits.collect())
 }
 
-#[allow(dead_code)]
 pub fn changes_for_symbol(conn: &Connection, symbol: &Symbol) -> anyhow::Result<Vec<Change>> {
     let mut stmt = conn.prepare("select commit_id, seconds_since_epoch, kind, qualifiers, file_path, novel_lhs, novel_rhs, size_after from changes where kind = ?1 and file_path = ?2 and qualifiers = ?3")?;
 
