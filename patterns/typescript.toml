@@ -1,0 +1,53 @@
+parser = { precompiled = "typescript" }
+
+[qualifier]
+seperator = "."
+
+[file]
+file_types = ["ts"]
+
+[[pattern]]
+kind = "function"
+query = """
+(function_declaration
+    name: (identifier) @name) @function
+"""
+range_capture = ["function"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "class"
+query = """
+(class_declaration
+    name: (type_identifier) @name) @class
+"""
+range_capture = ["class"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "method"
+query = """
+(method_definition
+    name: (_) @name) @method
+"""
+range_capture = ["method"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "interface"
+query = """
+(interface_declaration
+    name: (type_identifier) @name) @interface
+"""
+range_capture = ["interface"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "type"
+query = """
+(type_alias_declaration
+    (type_identifier) @name
+) @type
+"""
+range_capture = ["type"]
+identifier_capture = ["name"]
