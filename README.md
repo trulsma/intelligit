@@ -9,6 +9,9 @@
 
 ![intelligit status](docs/status.gif)
 
+### Find commits for a symbol
+![intelligit log](docs/log.gif)
+
 ## How does it work
 Intelligit uses [patterns](docs/PATTERN.md) to find meaningful symbols in the source code and tracks changes in the symbols.
 The patterns use [tree-sitter](https://github.com/tree-sitter/tree-sitter).
@@ -32,6 +35,9 @@ Intelligit is currently in its early stages of development, and the project's di
 ## Contributions
 If you have an idea or want to help please do :)
 
+## Limitations
+
+* Intelligit does not handle building the history on different branches. As of now intelligit is oblivious to branches.
 
 ## License
 Intelligit is licensed under the [MIT License](LICENSE)
