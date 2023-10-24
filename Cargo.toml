@@ -1,6 +1,6 @@
 [package]
 name = "intelligit"
-version = "0.2.6"
+version = "0.2.7"
 edition = "2021"
 license = "MIT"
 description = "Tool for finding insight in git history"
