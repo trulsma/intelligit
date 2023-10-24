@@ -644,6 +644,7 @@ impl PatternListMatcher {
             ("lua", include_str!("../../patterns/lua.toml")),
             ("typescript", include_str!("../../patterns/typescript.toml")),
             ("javascript", include_str!("../../patterns/javascript.toml")),
+            ("go", include_str!("../../patterns/go.toml")),
         ];
 
         patterns

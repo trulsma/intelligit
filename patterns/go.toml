@@ -1,0 +1,91 @@
+parser = { precompiled = "go" }
+
+[qualifier]
+seperator = "."
+
+[file]
+file_types = ["go"]
+
+[[pattern]]
+kind = "const"
+query = """
+(const_declaration
+    (const_spec
+        name: (identifier) @name)) @const
+"""
+range_capture = ["const"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "interface"
+query = """
+(type_declaration
+    (type_spec
+        name: (type_identifier) @name
+        type: (interface_type)
+    )
+)
+@interface
+"""
+range_capture = ["interface"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "method"
+query = """
+(type_declaration
+    (type_spec
+        name: (type_identifier)
+        type: (interface_type
+            (method_spec
+                name: (field_identifier) @name
+            ) @method
+        )
+    )
+)
+@interface
+"""
+range_capture = ["method"]
+identifier_capture = ["name"]
+
+
+
+[[pattern]]
+kind = "struct"
+query = """
+(type_declaration
+    (type_spec
+        name: (type_identifier) @name
+        type: (struct_type)
+    )
+)
+@interface
+"""
+range_capture = ["interface"]
+identifier_capture = ["name"]
+
+[[pattern]]
+kind = "method"
+query = """
+(method_declaration
+    receiver: (parameter_list (parameter_declaration type: (type_identifier) @receiver))
+    name: (field_identifier) @name
+)
+@method
+"""
+range_capture = ["method"]
+identifier_capture = ["receiver", "name"]
+
+
+
+
+[[pattern]]
+kind = "function"
+query = """
+(function_declaration
+    name: (identifier) @name
+)
+@function
+"""
+range_capture = ["function"]
+identifier_capture = ["name"]
