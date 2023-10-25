@@ -8,10 +8,10 @@
 ## Capabilities
 
 ### Show symbols in status
-![intelligit status](docs/status.gif)
+![intelligit status](./docs/status.gif)
 
 ### Find commits for a symbol
-![intelligit log](docs/log.gif)
+![intelligit log](./docs/log.gif)
 
 ## How does it work
 Intelligit uses [patterns](docs/PATTERN.md) to find meaningful symbols in the source code and tracks changes in the symbols. 
