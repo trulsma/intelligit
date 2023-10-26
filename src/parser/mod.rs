@@ -123,6 +123,12 @@ pub enum PatternError {
     UnsupportedFilter(String),
 }
 
+enum TransformedMatch {
+    None,
+    New(PatternMatch),
+    Existing(Rc<PatternMatch>),
+}
+
 impl Pattern {
     fn passes_filters(
         &self,
@@ -232,11 +238,11 @@ impl Pattern {
         source: &[u8],
         qualified_matches: &HashMap<(Kind, Qualifiers), Rc<PatternMatch>>,
         matches: &[Rc<PatternMatch>],
-    ) -> Result<Option<PatternMatch>, PatternError> {
+    ) -> Result<TransformedMatch, PatternError> {
         let passes_filters = self.passes_filters(query, mtch, source)?;
 
         if !passes_filters {
-            return Ok(None);
+            return Ok(TransformedMatch::None);
         }
 
         let range = self.range(query, mtch)?;
@@ -265,10 +271,10 @@ impl Pattern {
 
         if let Some(mtch) = qualified_matches.get(&(kind.clone(), full_qualifiers.clone())) {
             mtch.add_range(range);
-            return Ok(None);
+            return Ok(TransformedMatch::Existing(mtch.clone()));
         }
 
-        Ok(Some(PatternMatch {
+        Ok(TransformedMatch::New(PatternMatch {
             kind,
             qualifiers,
             full_qualifiers,
@@ -506,20 +512,28 @@ impl PatternList {
                 &transformed_matches,
             )?;
 
-            if let Some(transformed_match) = transformed_match {
-                let transformed_match = Rc::new(transformed_match);
-                transformed_matches.push(transformed_match.clone());
-                qualified_matches.insert(
-                    (
-                        transformed_match.kind.clone(),
-                        transformed_match.full_qualifiers.clone(),
-                    ),
-                    transformed_match,
-                );
+            match transformed_match {
+                TransformedMatch::None => continue,
+                TransformedMatch::New(mtch) => {
+                    let transformed_match = Rc::new(mtch);
+                    transformed_matches.push(transformed_match.clone());
+                    qualified_matches.insert(
+                        (
+                            transformed_match.kind.clone(),
+                            transformed_match.full_qualifiers.clone(),
+                        ),
+                        transformed_match,
+                    );
+                }
+                TransformedMatch::Existing(mtch) => {
+                    transformed_matches.push(mtch);
+                }
             }
         }
 
-        Ok(transformed_matches)
+        let matches = transformed_matches.into_iter().unique_by(|mtch| (mtch.kind.clone(), mtch.full_qualifiers.clone())).collect();
+
+        Ok(matches)
     }
     /// Parse a [tree_sitter::Tree] from a UTF8 source
     /// # Arguements
@@ -1101,14 +1115,14 @@ impl Foo {
 
 }
 
+impl Bar {
+
+}
+
 impl Foo {
     fn baz() {
 
     }
-}
-
-impl Bar {
-
 }
 
 impl Foo {
@@ -1128,10 +1142,10 @@ impl Foo {
                     end_point: tree_sitter::Point { row: 3, column: 1 },
                 },
                 tree_sitter::Range {
-                    start_byte: 16,
-                    end_byte: 50,
-                    start_point: tree_sitter::Point { row: 5, column: 0 },
-                    end_point: tree_sitter::Point { row: 9, column: 1 },
+                    start_byte: 31,
+                    end_byte: 65,
+                    start_point: tree_sitter::Point { row: 9, column: 0 },
+                    end_point: tree_sitter::Point { row: 13, column: 1 },
                 },
                 tree_sitter::Range {
                     start_byte: 67,
@@ -1141,19 +1155,6 @@ impl Foo {
                 },
             ]),
         });
-        let impl_foo_baz = Rc::new(PatternMatch {
-            hidden: false,
-            kind: "fn".into(),
-            qualifiers: vec!["baz".into()],
-            full_qualifiers: vec!["Foo".into(), "baz".into()],
-            parent: Some(impl_foo.clone()),
-            ranges: RefCell::new(vec![tree_sitter::Range {
-                start_byte: 31,
-                end_byte: 48,
-                start_point: tree_sitter::Point { row: 6, column: 4 },
-                end_point: tree_sitter::Point { row: 8, column: 5 },
-            }]),
-        });
 
         let impl_bar = Rc::new(PatternMatch {
             hidden: false,
@@ -1162,15 +1163,29 @@ impl Foo {
             full_qualifiers: vec!["Bar".into()],
             parent: None,
             ranges: RefCell::new(vec![tree_sitter::Range {
-                start_byte: 52,
-                end_byte: 65,
-                start_point: tree_sitter::Point { row: 11, column: 0 },
-                end_point: tree_sitter::Point { row: 13, column: 1 },
+                start_byte: 16,
+                end_byte: 29,
+                start_point: tree_sitter::Point { row: 5, column: 0 },
+                end_point: tree_sitter::Point { row: 7, column: 1 },
+            }]),
+        });
+
+        let impl_foo_baz = Rc::new(PatternMatch {
+            hidden: false,
+            kind: "fn".into(),
+            qualifiers: vec!["baz".into()],
+            full_qualifiers: vec!["Foo".into(), "baz".into()],
+            parent: Some(impl_foo.clone()),
+            ranges: RefCell::new(vec![tree_sitter::Range {
+                start_byte: 46,
+                end_byte: 63,
+                start_point: tree_sitter::Point { row: 10, column: 4 },
+                end_point: tree_sitter::Point { row: 12, column: 5 },
             }]),
         });
 
         let matches = pattern.matches(source, None, None).unwrap();
 
-        assert_eq!(vec![impl_foo, impl_foo_baz, impl_bar], matches);
+        assert_eq!(vec![impl_foo, impl_bar, impl_foo_baz], matches);
     }
 }

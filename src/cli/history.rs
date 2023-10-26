@@ -1,13 +1,12 @@
 use crate::cli::command::{
-    BuildHistoryArgs, GlobalOpts, History, HistoryOpts, HistorySubcommands,
-    InspectHistoryArgs,
+    BuildHistoryArgs, GlobalOpts, History, HistoryOpts, HistorySubcommands, InspectHistoryArgs,
 };
 use crate::cli::symbols::{find_symbol, SymbolFilter};
 use crate::datastore;
 use crate::diff;
 use crate::git;
-use crate::parser::PatternListMatcher;
 use crate::parser::symbol::Symbol;
+use crate::parser::PatternListMatcher;
 use anyhow::{Context, Ok};
 use colored::Colorize;
 use git::{ChangeHistoryIterator, CommitExt, RepositoryExt};
@@ -61,7 +60,12 @@ fn list_changes(history_opts: &HistoryOpts, _global_opts: &GlobalOpts) -> anyhow
 }
 
 #[allow(dead_code)]
-pub(crate) fn assert_history_updated(repository: &Repository, datastore: &Connection, allow_outdated: bool, allow_detached: bool) -> anyhow::Result<()> {
+pub(crate) fn assert_history_updated(
+    repository: &Repository,
+    datastore: &Connection,
+    allow_outdated: bool,
+    allow_detached: bool,
+) -> anyhow::Result<()> {
     let head = repository.head()?;
 
     if !allow_detached && head.is_detached() {
@@ -72,15 +76,18 @@ pub(crate) fn assert_history_updated(repository: &Repository, datastore: &Connec
         let anyhow::Result::Ok(Some(commit)) = datastore::latest_commit(datastore) else {
             anyhow::bail!("History has not been built. Run 'intelligit history build'");
         };
-        if commit.id.as_slice() != head.id().context("Failed to get id from head commit")?.as_bytes() {
+        if commit.id.as_slice()
+            != head
+                .id()
+                .context("Failed to get id from head commit")?
+                .as_bytes()
+        {
             anyhow::bail!("History is not updated. Run 'intelligit history build'");
         }
     }
 
     Ok(())
 }
-
-
 
 fn inspect_history(
     args: &InspectHistoryArgs,
@@ -423,19 +430,19 @@ fn build_history(
                         };
                         tree_cache.insert(key, tree);
 
-                        let qualifiers: HashSet<_> = lhs
+                        let qualifiers: HashSet<(std::rc::Rc<str>, Vec<std::rc::Rc<str>>)> = lhs
                             .iter()
-                            .map(|mtch| &mtch.full_qualifiers)
-                            .chain(rhs.iter().map(|mtch| &mtch.full_qualifiers))
-                            .cloned()
+                            .map(|mtch| (mtch.kind.clone(), mtch.full_qualifiers.clone()))
+                            .chain(rhs.iter().map(|mtch| (mtch.kind.clone(), mtch.full_qualifiers.clone())))
                             .collect();
-                        all_changes.extend(qualifiers.into_iter().filter_map(|full_qualifiers| {
+
+                        all_changes.extend(qualifiers.into_iter().filter_map(|(kind, full_qualifiers)| {
                             let lhs = lhs
                                 .iter()
-                                .find(|mtch| mtch.full_qualifiers == full_qualifiers);
+                                .find(|mtch| mtch.kind == kind && mtch.full_qualifiers == full_qualifiers);
                             let rhs = rhs
                                 .iter()
-                                .find(|mtch| mtch.full_qualifiers == full_qualifiers);
+                                .find(|mtch| mtch.kind == kind && mtch.full_qualifiers == full_qualifiers);
 
                             match (lhs, rhs) {
                                 (Some(lhs), None) => Some(datastore::Change {

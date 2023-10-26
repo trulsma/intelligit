@@ -76,7 +76,7 @@ pub(crate) fn find_symbol(
                     qualifiers: symbol.qualifiers.clone(),
                 },
                 [] => {
-                    anyhow::bail!("Found more no symbol..")
+                    anyhow::bail!("Found no symbols..")
                 }
                 symbols => {
                     println!("Found more than one symbol..");
