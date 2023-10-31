@@ -53,7 +53,7 @@ pub(crate) struct GlobalOpts {
     #[clap(long, global = true, default_value_t = false)]
     pub(crate) no_default_patterns: bool,
 
-    #[clap(long = "log", global = true, default_value = "error")]
+    #[clap(long = "log", global = true, default_value = "warn")]
     pub(crate) loglevel: LogLevel,
 
     /// Output format
@@ -110,7 +110,7 @@ pub(crate) enum Subcommands {
     /// Find commits for a symbol
     Log(LogCommand),
 
-    /// Stage a symbol
+    /// Stage a symbol (Experimental)
     Add(AddCommand)
 }
 

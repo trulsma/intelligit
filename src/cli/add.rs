@@ -15,6 +15,7 @@ pub(crate) fn handle_add_command(
     command: AddCommand,
     global_opts: &GlobalOpts,
 ) -> anyhow::Result<()> {
+    log::warn!("'intelligit add' is a highly experimental feature..");
     let repo = open("./").unwrap();
 
     let mut index = repo.open_index().unwrap();
