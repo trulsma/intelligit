@@ -109,7 +109,12 @@ pub(crate) enum Subcommands {
 
     /// Find commits for a symbol
     Log(LogCommand),
+
+    /// Stage a symbol
+    Add(AddCommand)
 }
+
+
 
 #[derive(Debug, clap::ValueEnum, Clone, Copy)]
 pub(crate) enum DiffFormat {
@@ -152,6 +157,16 @@ pub(crate) struct InspectHistoryArgs {
     /// Row of symbol, zero indexed
     #[clap(long, short = 'r', default_value = None)]
     pub(crate) row: Option<usize>,
+}
+
+#[derive(Debug, clap::Args)]
+pub(crate) struct AddCommand {
+    #[clap(long, short = 'f', default_value = None)]
+    pub(crate) file: Option<String>,
+    #[clap(long, short = 'k', default_value = None)]
+    pub(crate) kind: Option<String>,
+    #[clap(long, short = 'q', default_value = None)]
+    pub(crate) qualifiers: Option<String>,
 }
 
 #[derive(Debug, clap::Args)]
