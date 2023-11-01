@@ -7,9 +7,10 @@ pub mod pattern;
 pub mod status;
 pub mod symbols;
 pub mod add;
+pub mod parser;
 
 use clap::{ColorChoice, Parser};
-use command::{App, GlobalOpts, ParserSubcommands, Subcommands};
+use command::{App, ParserSubcommands, Subcommands};
 use diff::handle_diff_command;
 use history::handle_history_subcommand;
 use pattern::handle_pattern_subcommand;
@@ -17,11 +18,7 @@ use symbols::print_symbols;
 use status::print_status;
 use commits::handle_log_command;
 
-use self::add::handle_add_command;
-
-fn list_parsers(_global_opts: &GlobalOpts) -> anyhow::Result<()> {
-    todo!("List parsers")
-}
+use self::{add::handle_add_command, parser::list_parsers};
 
 pub fn main_impl() -> anyhow::Result<()> {
     let args = App::parse();

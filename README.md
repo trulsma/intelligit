@@ -4,6 +4,7 @@
 
 ![License](https://img.shields.io/crates/l/intelligit.svg)
 [![Crates Status](https://img.shields.io/crates/v/intelligit.svg)](https://crates.io/crates/intelligit)
+[![Release](https://github.com/trulsma/intelligit/actions/workflows/release.yml/badge.svg)](https://github.com/trulsma/intelligit/actions/workflows/release.yml)
 
 ## Capabilities
 
