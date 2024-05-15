@@ -7,14 +7,14 @@ use rusqlite::Connection;
 
 use crate::cli::command::OutputFormat;
 use crate::datastore;
-use crate::parser::symbol::Symbol;
+use crate::parser::symbol::{Symbol, SymbolWithRanges};
 use crate::parser::PatternListMatcher;
 
 use super::command::GlobalOpts;
 
 #[derive(serde::Serialize)]
 struct Output {
-    symbols: Vec<Symbol>,
+    symbols: Vec<SymbolWithRanges>,
 }
 
 pub struct SymbolFilter<'a> {
@@ -161,7 +161,7 @@ pub(crate) fn print_symbols(path: &str, global_opts: &GlobalOpts) -> anyhow::Res
         let data = std::fs::read(&file).context(format!("Failed to read content from {file}"))?;
         let matches = pattern.matches(&data, None, None)?;
         for mtch in matches {
-            output.symbols.push(Symbol::new(mtch, &file, pattern));
+            output.symbols.push(SymbolWithRanges::new(mtch, &file, pattern));
         }
     }
 

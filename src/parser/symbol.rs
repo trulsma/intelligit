@@ -4,6 +4,44 @@ use itertools::Itertools;
 
 use super::{PatternMatch, PatternList};
 
+#[derive(Debug, serde::Serialize)]
+pub struct SymbolRange {
+    pub start_byte: usize,
+    pub end_byte: usize,
+    pub start_row: usize,
+    pub start_col: usize,
+    pub end_row: usize,
+    pub end_col: usize,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct SymbolWithRanges {
+    pub kind: String,
+    pub qualifiers: String,
+    pub file_path: String,
+    pub ranges: Vec<SymbolRange>
+}
+
+impl SymbolWithRanges {
+    pub fn new(mtch: Rc<PatternMatch>, file_path: &str, pattern: &PatternList) -> Self {
+        Self {
+            kind: mtch.kind.to_string(),
+            qualifiers: mtch
+                .full_qualifiers
+                .join(&pattern.qualifier_settings.seperator),
+            file_path: file_path.to_string(),
+            ranges: mtch.ranges.take().into_iter().map(|range| SymbolRange {
+                start_byte: range.start_byte,
+                end_byte: range.end_byte,
+                start_row: range.start_point.row,
+                start_col: range.start_point.column,
+                end_row: range.end_point.row,
+                end_col: range.end_point.column,
+
+            }).collect()
+        }
+    }
+}
 
 #[derive(Debug, serde::Serialize)]
 pub struct Symbol {
